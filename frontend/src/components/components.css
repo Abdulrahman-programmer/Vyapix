@@ -1,0 +1,62 @@
+@import "tailwindcss";
+@custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
+
+@layer components{
+    .container{
+        @apply flex justify-start items-center flex-wrap gap-4 ml-5 lg:ml-10 lg:gap-10 pr-3.5
+        dark:text-white ;
+    }
+    .detailBox{
+        @apply flex p-4 rounded-lg shadow-md w-35 md:w-55
+        bg-white dark:bg-gray-700 dark:text-white 
+        ring-2 ring-gray-300;
+    }
+    .iconBox{
+        @apply bg-blue-200 p-2 rounded-md h-10 w-10 lg:h-15 lg:w-15
+        flex justify-center items-center text-blue-600 text-xl;
+    }
+    .values{
+        @apply ml-4
+    }
+    .chartBox{
+        @apply p-4 bg-white rounded-lg shadow-md h-auto lg:w-1/2 lg:flex-grow lg:h-96 
+        flex justify-center items-center
+        dark:bg-gray-800 dark:text-white;
+    }
+    .header{
+        @apply flex bg-white w-[100vw] items-center
+        dark:bg-gray-800 dark:text-white;
+    }
+   .logo{
+     @apply flex items-center  gap-0 p-2 text-3xl font-bold text-gray-800 dark:text-white ;
+   }
+    .nav-links{
+        @apply flex  space-x-2 text-lg font-medium items-center mr-2
+        md:space-x-8
+    }
+    .btn{
+        @apply p-2.5 px-5 rounded-xl bg-blue-950 text-amber-50 translate-y-[-15%]
+        hover:bg-blue-800  
+        hover:scale-110
+        transition-all duration-300 transition-discrete ease-in
+        dark:bg-blue-500 dark:text-white
+        dark:hover:bg-blue-600
+    }
+    .Intro-text{
+        @apply  flex flex-col items-center justify-center text-center 
+    }
+    .box{
+        @apply fixed top-20 bg-white/90 w-md  ring-1 ring-gray-400 rounded-md place-self-center max-w-[80%]
+        left-1/2 -translate-x-1/2 shadow-lg z-20
+        dark:bg-gray-500/90 dark:ring-gray-600
+    }
+    .label{
+        @apply text-sm font-medium text-gray-700
+        dark:text-gray-200
+    }
+    .ip{
+        @apply ring-1 ring-gray-400 rounded-md p-1.5 mb-2.5
+        focus:outline-0 
+        focus:inset-ring-1 inset-ring-blue-400
+    }
+}
