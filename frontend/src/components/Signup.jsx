@@ -54,13 +54,14 @@ function SignUp(params) {
                 alt="close" onClick={() => { params.close() }} />
             </div>
             <h1 className="text-5xl pt-10 label text-center">Sign up</h1>
+
             <form onSubmit={handleSubmit} className="flex flex-col p-10 pb-0 pt-5">
 
                 <label htmlFor="gst" className="label">GST no.</label>
-                <input type="text" name="gst" id="gstNo" required className="ip" />
+                <input type="text" name="gstNo" id="gstNo" required className="ip" />
 
                 <label htmlFor="Name" className="label">Name</label>
-                <input type="text" name="username" id="name" required className="ip" />
+                <input type="text" name="name" id="name" required className="ip" />
 
                 <label htmlFor="email" className="label">Email</label>
                 <input type="email" name="email" id="email" required className="ip" />

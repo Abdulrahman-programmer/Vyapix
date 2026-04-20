@@ -14,51 +14,33 @@ axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-const fetchMonthlyMaxSales = async (year = "2025") => {
-  try {
-    const token = localStorage.getItem("authToken");
-    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
 
-    const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    const monthlyData = [];
-
-    for (let month = 0; month < 12; month++) {
-      const start = `${year}-${String(month + 1).padStart(2, "0")}-01T00:00:00`;
-      const endDate = new Date(year, month + 1, 0).getDate();
-      const end = `${year}-${String(month + 1).padStart(2, "0")}-${endDate}T23:59:59`;
-
-      const res = await axios.get(
-        `/api/reports/most-selling-products?startDate=${start}&endDate=${end}`,
-        config
-      );
-
-      const topItem = res.data.data?.[0];
-
-      monthlyData.push({
-        month: monthNames[month],
-        item: topItem?.productName || "N/A",
-        sold: topItem?.totalQuantitySold || 0,
-      });
-    }
-
-    return monthlyData;
-  } catch (error) {
-    console.error("Error fetching monthly sales:", error);
-    return [];
-  }
-};
 
 const MaxSales = () => {
   const [salesData, setSalesData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    // Fetch data in background
-    fetchMonthlyMaxSales(new Date().getFullYear()).then((data) => {
-      setSalesData(data);
+  const loadSalesData = async () => {
+    try {
+      
+      const token = localStorage.getItem('authToken');
+      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};  
+
+      const response = await axios.get("/api/reports/monthly-max-sold-item", config);
+      setSalesData(response.data);
+      console.log(response);
+      
+    } catch (error) {
+      console.error("Failed to load sales data:", error);
+    } finally {
       setLoading(false);
-    });
+    }
+  }
+  
+  useEffect(() => {
+    loadSalesData();
   }, []);
+
 
   if (loading) return <div className="w-full h-20 bg-white rounded-2xl flex items-center justify-center dark:bg-gray-800">Loading chart...</div>;
 

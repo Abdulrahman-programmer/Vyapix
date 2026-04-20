@@ -9,9 +9,12 @@ router.post("/add", verifyToken, storeController.addProduct);
 router.get("/products", verifyToken, storeController.getProducts);
 router.put("/update/:id", verifyToken, storeController.updateProduct);
 router.delete("/delete/:id", verifyToken, storeController.deleteProduct);
+router.get("/count", verifyToken, storeController.productsCount);
+router.get("/value", verifyToken, storeController.productsValue);
+router.get("/lowStock/:limit", verifyToken, storeController.lowStock);
 router.post("/sale", verifyToken, storeController.postSale);
 router.get("/sales", verifyToken, storeController.getSales);
-
+router.get("/salesCount", verifyToken, storeController.getSalesCount);
 
 
 

@@ -52,7 +52,8 @@ exports.getProducts = async (req, res) => {
 exports.updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const { barcode, name, category, quantity, costPrice, sellingPrice, purchaseDate, expiryDate } = req.body;
+
+    const {barcode, name, category, quantity, costPrice, sellingPrice, purchaseDate, expiryDate } = product.findById(id);
 
     // validation
     if (!barcode || !name || !category || !quantity || !costPrice || !sellingPrice || !purchaseDate || !expiryDate) {
@@ -107,6 +108,36 @@ exports.deleteProduct = async (req, res) => {
   }
 }
 
+exports.productsCount = async (req, res) => {
+  try {
+    const products = (await product.countDocuments({ userId: req.user.id, quantity: { $gt: 0 } }));
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+exports.productsValue = async (req, res) => {
+  try {
+    const products = await product.find({ userId: req.user.id });
+    const totalValue = products.reduce((acc, prod) => acc + (prod.sellingPrice * prod.quantity), 0);
+    res.json(totalValue);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+exports.lowStock = async (req, res) => {
+  try {
+    const limit = req.params.limit || 1; 
+    const products = await product.countDocuments({ userId: req.user.id, quantity: { $lte: 0 } });
+    res.json(products);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+
 exports.updateStock = async (productId, soldQuantity) => {
   try {
     const existingProduct = await product.findById(productId);
@@ -142,5 +173,14 @@ exports.getSales = async (req, res) => {
     res.json(sales);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching sales report', error: err });
+  }
+};
+
+exports.getSalesCount = async (req, res) => {
+  try {
+    const salesCount = await sale.countDocuments({ userId: req.user.id });
+    res.json(salesCount);
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching sales count', error: err });
   }
 };
