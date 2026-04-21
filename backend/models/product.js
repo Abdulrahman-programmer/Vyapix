@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const user = require("./user");
+
 
 const productSchema = new mongoose.Schema({
   userId: {
@@ -23,14 +23,17 @@ const productSchema = new mongoose.Schema({
   quantity: {
     type: Number,
     required: true,
+    min: [0, "Quantity cannot be negative"],
   },
   costPrice: {
     type: Number,
     required: true,
+    min: [0, "Cost price cannot be negative"],
   },
   sellingPrice: {
     type: Number,
     required: true,
+    min: [0, "Selling price cannot be negative"],
   },
   purchaseDate: {
     type: Date,

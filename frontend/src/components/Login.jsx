@@ -4,13 +4,16 @@ import closeIcon from "../assets/close.svg";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Loading from "./Loading";
+
+ const API = import.meta.env.VITE_API_BASE_URL ;
+  axios.defaults.baseURL = API;
+
 function Login(params) {
   const navigate = useNavigate();
   const [visibility, setVisibility] = useState("password");
   const [loading, setLoading] = useState(false);
 
-  const API = import.meta.env.VITE_API_BASE_URL ;
-  axios.defaults.baseURL = API;
+ 
 
   const handleSubmit = async (e) => {
     setLoading(true)
@@ -31,9 +34,9 @@ function Login(params) {
   // optional: close modal then navigate
   params.close?.();
   // Build name/email to pass to afterlogin. Prefer server response, fall back to submitted email.
-  const name = res.data?.user?.username ;
+  const name = res.data?.user?.name ;
   const userEmail = res.data?.user?.email;
-  sessionStorage.setItem("userName", name || "");
+  sessionStorage.setItem("name", name || "");
   sessionStorage.setItem("userEmail", userEmail || email);
   
   navigate("/afterlogin");

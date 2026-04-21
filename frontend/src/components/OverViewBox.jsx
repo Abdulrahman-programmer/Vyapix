@@ -23,16 +23,17 @@ function OverViewBox() {
 
             
             const [countRes,totalValue,outOfStockRes,salesRes] = await Promise.all([
-                axios.get("/api/store/count", config),
-                axios.get("/api/store/value", config),
-                axios.get("/api/store/lowStock/1", config),
-                axios.get("/api/store/salesCount", config),
+                axios.get("/api/products/count", config),
+                axios.get("/api/reports/value", config),
+                axios.get("/api/reports/low-stock", config),
+                axios.get("/api/sales/count", config),
             ]);
-
-            setTotalProducts(countRes.data);
+                
+                
+            setTotalProducts(countRes.data.count);
             setTotalAmount(totalValue.data);
             setTotalOutOfStock(outOfStockRes.data);
-            setTotalOrders(salesRes.data);
+            setTotalOrders(salesRes.data.count);
            
             
             

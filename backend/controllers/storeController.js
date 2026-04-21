@@ -40,6 +40,7 @@ exports.addProduct = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 }
+
 exports.getProducts = async (req, res) => {
   try {
     const products = await product.find({ userId: req.user.id });
@@ -49,11 +50,24 @@ exports.getProducts = async (req, res) => {
   }
 }
 
+exports.getProductByBarcode = async (req, res) => {
+  try {
+    const { barcode } = req.query;
+    const productData = await product.findOne({ barcode, userId: req.user.id });
+    if (!productData) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+    res.json(productData);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
 exports.updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const {barcode, name, category, quantity, costPrice, sellingPrice, purchaseDate, expiryDate } = product.findById(id);
+    const {barcode, name, category, quantity, costPrice, sellingPrice, purchaseDate, expiryDate } = req.body;
 
     // validation
     if (!barcode || !name || !category || !quantity || !costPrice || !sellingPrice || !purchaseDate || !expiryDate) {
@@ -169,7 +183,7 @@ exports.postSale = async (req, res) => {
 
 exports.getSales = async (req, res) => {
   try {
-    const sales = await sale.find().populate('productId');
+    const sales = await sale.find({ userId: req.user.id , createdAt: { $gte: req.query.startDate, $lte: req.query.endDate } }).populate('productId');
     res.json(sales);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching sales report', error: err });
@@ -182,5 +196,19 @@ exports.getSalesCount = async (req, res) => {
     res.json(salesCount);
   } catch (err) {
     res.status(500).json({ message: 'Error fetching sales count', error: err });
+  }
+};
+
+exports.deleteSale = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const saleData = await sale.findOne({ _id: id, userId: req.user.id });  
+    if (!saleData) {
+      return res.status(404).json({ message: "Sale not found" });
+    }
+    await sale.deleteOne({ _id: id });
+    res.json({ message: "Sale deleted successfully" });
+  } catch (err) {
+    res.status(500).json({ message: 'Error deleting sale', error: err });
   }
 };

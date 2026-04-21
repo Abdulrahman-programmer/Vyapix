@@ -28,7 +28,7 @@ const MaxSales = () => {
 
       const response = await axios.get("/api/reports/monthly-max-sold-item", config);
       setSalesData(response.data);
-      console.log(response);
+      
       
     } catch (error) {
       console.error("Failed to load sales data:", error);

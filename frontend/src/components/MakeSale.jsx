@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import BarcodeScanner from './BarcodeScanner';
 
+
 axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL; 
 
 export default function MakeSale(params) {
@@ -14,7 +15,7 @@ export default function MakeSale(params) {
     const [products, setProducts] = useState([]);
     const [productsLoading, setProductsLoading] = useState(false);
     const [selectedIds, setSelectedIds] = useState([]);
-       const [quantities, setQuantities] = useState({});
+    const [quantities, setQuantities] = useState({});
     const [selectedCategory, setSelectedCategory] = useState('ALL');
     const [scannerOpen, setScannerOpen] = useState(false);
     const [barcodeInput, setBarcodeInput] = useState('');
@@ -46,10 +47,10 @@ export default function MakeSale(params) {
             const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
 
             try {
-                const res = await axios.get('/api/products', config);
+                const res = await axios.get('/api/store/products', config);
                 setProducts(
-                    Array.isArray(res.data.data) 
-                        ? res.data.data 
+                    Array.isArray(res.data) 
+                        ? res.data 
                         : (res.data.payload || [])
                 );
             } catch (err) {
@@ -116,12 +117,14 @@ export default function MakeSale(params) {
         };
 
         try {
+            
             const items = selectedIds.map((id) => {
                 const p = products.find((x) => getProductId(x) === String(id)) || {};
                 return {
-                    barcode: p.barcode ?? id,
+                    userId: p.userId,
+                    productId: p._id || p.productId || id,
                     quantity: Number(quantities[id] || 1),
-                    sellingPrice: Number(p.sellingPrice ?? p.price ?? 0)
+                    totalPrice: (p.sellingPrice ?? p.price ?? 0) * Number(quantities[id] || 1)
                 };
             });
 
@@ -129,7 +132,7 @@ export default function MakeSale(params) {
 
             for (const item of items) {
                 try {
-                    await axios.post('/api/sales', item, postConfig);
+                    await axios.post('/api/store/sale', item, postConfig);
                     results.success.push(item.barcode);
                 } catch (e) {
                     results.failed.push({

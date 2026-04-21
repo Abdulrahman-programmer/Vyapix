@@ -6,6 +6,9 @@ const connectDB = require('./config/db');
 const authRoutes   = require('./routes/auth');
 const storeRoutes  = require('./routes/store');
 const reportRoutes = require('./routes/reports');
+const productRoutes = require('./routes/product');
+const saleRoutes = require('./routes/sale');
+
 
 const app = express();
 
@@ -16,7 +19,9 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use('/api/auth',    authRoutes);
-app.use('/api/store',   storeRoutes);
+app.use('/api/reports', reportRoutes);
+app.use('/api/products', productRoutes);
+app.use('/api/sales', saleRoutes);
 app.use('/api/reports', reportRoutes);
 
 // Start

@@ -25,7 +25,7 @@ const menuItems = [
 const Menu = () => {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
-  const name = sessionStorage.getItem("userName") || "User";
+  const name = sessionStorage.getItem("name") || "User";
   const email = sessionStorage.getItem("userEmail") || "user@example.com";
 
 
