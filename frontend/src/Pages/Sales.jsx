@@ -4,6 +4,9 @@ import axios from "axios";
 import Loading from "../components/Loading";
 import MakeSale from "../components/MakeSale";
 import { deleteSale } from "../utills/deleteSale";
+import { fetchSales } from "../utills/fetchSales";
+import { fetchSalesbyDate } from "../utills/fetchSalesbyDate";
+import { fetchSalebyRange } from "../utills/fetchSalesbyRange";
 
 axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
 
@@ -20,7 +23,6 @@ const toArray = (value) => (Array.isArray(value) ? value : []);
 
 function Sales() {
     const [sales, setSales] = useState([]);
-    const [displayedSales, setDisplayedSales] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -31,30 +33,23 @@ function Sales() {
 
     // ── fetch all sales ────────────────────────────────────────────────────
 
-    const fetchSales = useCallback(async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const res = await axios.get("/api/sales", authConfig());
-            const data = toArray(res.data);
-            setSales(data);
-            setDisplayedSales(data);
-        } catch (err) {
-            setError(err.response?.data?.message || err.message || "Failed to load sales");
-        } finally {
-            setLoading(false);
-        }
+    const authConfig = () => {
+        const token = localStorage.getItem("authToken");
+        return token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+    };
+    const refreshSales = useCallback(() => {
+        fetchSales(axios, setLoading, setError, setSales, authConfig());
     }, []);
-
-    useEffect(() => { fetchSales(); }, [fetchSales]);
+    useEffect(() => { fetchSales(axios, setLoading, setError, setSales, authConfig()); }, [fetchSales]);
 
     // ── delete ─────────────────────────────────────────────────────────────
 
     const deleteSale = async (saleId) => {
         if (!window.confirm("Are you sure you want to delete this sale?")) return;
         try {
-            await deleteSale(axios, saleId, authConfig());
-            fetchSales();
+            await deleteSale(axios, saleId, authConfig())
+            .then(() => alert("Sale deleted successfully"))
+            .then(() => fetchSales(axios, setLoading, setError, setSales, authConfig()));
         } catch (err) {
             alert(err.response?.data?.message || err.message || "Failed to delete sale");
         }
@@ -64,7 +59,7 @@ function Sales() {
 
     const applyFilter = async () => {
         if (filterType === "all" || (!singleDate && !startDate && !endDate)) {
-            setDisplayedSales(sales);
+            fetchSales(axios, setLoading, setError, setSales, authConfig());
             return;
         }
 
@@ -75,17 +70,9 @@ function Sales() {
             let res;
 
             if (filterType === "single") {
-                res = await axios.get(`/api/sales?date=${singleDate}`, authConfig());
-                
-                setDisplayedSales(toArray(res.data));
+                fetchSalesbyDate(axios, singleDate, setLoading, setError, setSales, authConfig());
             } else if (filterType === "range") {
-                const params = new URLSearchParams();
-                if (startDate) params.append("startDate", `${startDate}T00:00:00`);
-                if (endDate)   params.append("endDate",   `${endDate}T23:59:59`);
-
-                const query = params.toString() ? `?${params.toString()}` : "";
-                res = await axios.get(`/api/sales/date-range${query}`, authConfig());
-                setDisplayedSales(toArray(res.data));
+                fetchSalebyRange(axios, startDate, endDate, setLoading, setError, setSales, authConfig());
             }
         } catch (err) {
             setError(err.response?.data?.message || err.message || "Failed to fetch filtered sales");
@@ -104,7 +91,7 @@ function Sales() {
 
     // ── derived ────────────────────────────────────────────────────────────
 
-    const totalAmount = displayedSales
+    const totalAmount = sales
         .reduce((sum, s) => sum + (s.totalPrice ?? 0), 0)
         .toFixed(2);
 
@@ -119,7 +106,7 @@ function Sales() {
                     Sales Page
                 </h1>
                 <div className="ml-auto">
-                    <MakeSale refreshSales={fetchSales} />
+                    <MakeSale refreshSales={refreshSales} />
                 </div>
             </div>
 
@@ -206,7 +193,7 @@ function Sales() {
                     </div>
 
                     {/* table or empty state */}
-                    {displayedSales.length === 0 ? (
+                    {sales.length === 0 ? (
                         <div className="mt-6 text-center text-gray-500">No sales found.</div>
                     ) : (
                         <div className="overflow-x-auto mt-6 bg-white dark:bg-gray-700 p-3 rounded-lg">
@@ -226,7 +213,7 @@ function Sales() {
                                 </thead>
 
                                 <tbody>
-                                    {displayedSales.map((sale, index) => (
+                                    {sales.map((sale, index) => (
                                         <tr
                                             key={sale._id}
                                             className="border border-black dark:border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"

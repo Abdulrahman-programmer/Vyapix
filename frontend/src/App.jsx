@@ -13,8 +13,6 @@ import LowStock from './Pages/LowStock';
 function App() {
   return (
    
-    
-    
       <Routes>
         <Route path="/" element={<Before_logIn />} />
 
