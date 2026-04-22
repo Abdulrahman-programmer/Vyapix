@@ -1,6 +1,7 @@
 //Pages / LowStock.jsx
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import { fetchLowProduct } from '../utills/fetchLowProduct';
 
 axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL; // set base URL for all axios requests from env variable
 
@@ -58,13 +59,16 @@ function Low_Stock() {
         setLoading(true);
         setError(null);
         try {
-            const res = await axios.get(`/api/products/low-stock/${th}`);
-            const payload = res.data && (res.data.data ?? res.data);
-            if (Array.isArray(payload)) {
-                setItems(payload.map(normalizeItem));
-            } else {
-                setItems([]);
+            const res = await fetchLowProduct(axios, th, {});
+            const data = res.data.data;
+            
+            
+            if (!Array.isArray(data)) {
+                throw new Error('Unexpected response format: expected an array of products');
             }
+            const normalized = data.map(normalizeItem);
+            setItems(normalized);
+        
         } catch (err) {
             // include more details to help debugging
             const msg = err?.response ? `${err.response.status} ${err.response.statusText}` : (err.message || 'Unknown error');

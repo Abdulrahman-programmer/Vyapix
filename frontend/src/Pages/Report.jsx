@@ -1,15 +1,22 @@
-//Pages / Report.jsx
+// Pages / Report.jsx
 import React, { useState } from "react";
 import axios from "axios";
-import { div } from "framer-motion/client";
+import { renderTable } from "../components/TableRenderer";
+import { fetchMostSellingProducts } from "../utills/mostSelling";
+import { fetchExpiringProducts } from "../utills/expirying";
+import { getStockValue } from "../utills/getStockValue";
+import { getDailyProfit } from "../utills/getDailyProfit";
+import { getProfitRange } from "../utills/getProfitRange";
+import { getSalesSummary } from "../utills/getSalesSummary";
 
-axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL; // set base URL for all axios requests from env variable
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
 
 export default function ReportPage() {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [result, setResult] = useState(null);
-
+    const [type, setType] = useState(""); // To track which report type is being displayed
+ 
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [dailyProfitDate, setDailyProfitDate] = useState("");
@@ -19,125 +26,78 @@ export default function ReportPage() {
         return token ? { headers: { Authorization: `Bearer ${token}` } } : {};
     };
 
-    const formatStart = (d) => `${d}T00:00:00`;
-    const formatEnd = (d) => `${d}T23:59:59`;
+    
+    // const callAPI = async (url) => {
+    //     try {
+    //         setLoading(true);
+    //         setError(null);
+    //         setResult(null);
 
-    const callAPI = async (url) => {
-        try {
-            setLoading(true);
-            setError(null);
-            setResult(null);
+    //         const res = await axios.get(url, config());
 
-            const res = await axios.get(url, config());
-            setResult(res.data);
-        } catch (err) {
-            setError(err.response?.data || err.message);
-        } finally {
-            setLoading(false);
-        }
-    };
+    //         console.log(res.data.data);
+            
+            
+    //         // ✅ normalize response safely
+            
+    //         setResult(res.data.data);
+    //     } catch (err) {
+    //         // ✅ better error handling
+    //         const msg =
+    //             err.response?.data?.message ||
+    //             err.response?.data ||
+    //             err.message ||
+    //             "Something went wrong";
+
+    //         setError(typeof msg === "string" ? msg : JSON.stringify(msg));
+    //     } finally {
+    //         setLoading(false);
+    //     }
+    // };
 
     // API calls
     const getMostSellingProducts = () => {
         if (!startDate || !endDate) return alert("Select start and end date");
-        callAPI(
-            `/api/reports/most-selling-products?startDate=${formatStart(
-                startDate
-            )}&endDate=${formatEnd(endDate)}`
-        );
+        fetchMostSellingProducts(axios, startDate, endDate, setResult , setLoading , setError, config())
+        .then(() => setType("mostSelling"));
+        
     };
-    const getExpiredProducts = () => callAPI("/api/reports/expired-products");
-    const getStockValue = () => callAPI("/api/reports/stock-value");
-    const getDailyProfit = () => {
-        if (!dailyProfitDate) return alert("Select a date");
-        callAPI(`/api/reports/profit/daily/${dailyProfitDate}`);
-    };
-    const getProfitRange = () => {
-        if (!startDate || !endDate) return alert("Select start and end date");
-        callAPI(
-            `/api/reports/profit/date-range?startDate=${formatStart(
-                startDate
-            )}&endDate=${formatEnd(endDate)}`
-        );
-    };
-    const getSalesSummary = () => callAPI("/api/reports/sales-summary");
 
-    // Table renderer (supports arrays & objects)
-const renderTable = (data) => {
-    // Always convert single object → array
-    const rows = Array.isArray(data.data) ? data.data : [data.data];
-
-    if (!rows || rows.length === 0) {
-        return <p className="text-center p-4">No data available</p>;
+    const getExpiringProducts = () =>{
+        fetchExpiringProducts(axios, setResult, setLoading, setError, config())
+        .then(() => setType("expiring"));
+}
+    const get_Stock_Value = () =>{
+        getStockValue(axios, setResult, setLoading, setError, config())
+        .then(() => setType("stockValue"));
     }
 
-    // Auto-generate header names
-    const headers = Object.keys(rows[0]);
+    const get_Daily_Profit = () => {
+        if (!dailyProfitDate) return alert("Select a date");
+        getDailyProfit(axios, dailyProfitDate, setResult, setLoading, setError, config())
+        .then(() => setType("dailyProfit")) ;
+    };
 
+    const get_Profit_Range = () => {
+        if (!startDate || !endDate) return alert("Select start and end date");
+        getProfitRange(axios, startDate, endDate, setResult, setLoading, setError, config())
+        .then(() => setType("profitRange"));
+    };
+
+    const get_Sales_Summary = () =>{
+        getSalesSummary(axios,startDate, endDate,setResult, setLoading, setError, config())
+        .then(() => setType("salesSummary"));
+    }
+    
+   
     return (
-        <div className="overflow-x-auto">
-            <table className="min-w-full bg-white dark:bg-gray-800 rounded-lg shadow">
-                <thead>
-                    <tr>
-                        {headers.map((key) => (
-                            <th
-                                key={key}
-                                className="px-6 py-3 border-b-2 border-gray-300 text-left leading-4 text-blue-500 tracking-wider"
-                            >
-                                {key}
-                            </th>
-                        ))}
-                    </tr>
-                </thead>
-
-                <tbody>
-                    {rows.map((item, index) => (
-                        <tr
-                            key={index}
-                            className={
-                                index % 2 === 0
-                                    ? "bg-gray-100 dark:bg-gray-700"
-                                    : "bg-white dark:bg-gray-800"
-                            }
-                        >
-                            {headers.map((header, i) => {
-                                const value = item[header];
-
-                                // Format numeric values with ₹ symbol and commas
-                                const formattedValue =
-                                    typeof value === "number"
-                                        ? `₹${new Intl.NumberFormat("en-IN").format(value)}`
-                                        : value !== null && value !== undefined
-                                        ? value.toString()
-                                        : "N/A";
-
-                                return (
-                                    <td
-                                        key={i}
-                                        className="px-6 py-4 border-b border-gray-300"
-                                    >
-                                        {formattedValue}
-                                    </td>
-                                );
-                            })}
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </div>
-    );
-};
-
-
-
-
-
-    return (
-        <div className="p-6  mx-auto lg:ml-72">
-            <h1 className="text-4xl font-bold mb-6 text-center bg-white p-2 rounded-2xl dark:bg-gray-700 transition duration-300">Reports</h1>
+        <div className="p-6 mx-auto lg:ml-72">
+            <h1 className="text-4xl font-bold mb-6 text-center bg-white p-2 rounded-2xl dark:bg-gray-700">
+                Reports
+            </h1>
 
             {/* Inputs */}
-            <div className="grid md:grid-cols-2 gap-4 mb-6 bg-white p-4 rounded-lg shadow dark:bg-gray-800 transition duration-300">
+            <div className="grid md:grid-cols-2 gap-4 mb-6 bg-white p-4 rounded-lg shadow dark:bg-gray-800">
                 <div className="flex items-center">
                     <label className="mr-2 font-medium">Start Date:</label>
                     <input
@@ -171,57 +131,37 @@ const renderTable = (data) => {
 
             {/* Buttons */}
             <div className="grid md:grid-cols-3 gap-4 mb-6">
-                <button
-                    className="bg-blue-500 text-white p-3 rounded shadow hover:bg-blue-600 transition"
-                    onClick={getMostSellingProducts}
-                >
+                <button className="btn" onClick={getMostSellingProducts}>
                     Most Selling Products
                 </button>
-                <button
-                    className="bg-blue-500 text-white p-3 rounded shadow hover:bg-blue-600 transition"
-                    onClick={getExpiredProducts}
-                >
-                    Expired Products
+                <button className="btn" onClick={getExpiringProducts}>
+                    Expiring Products
                 </button>
-                <button
-                    className="bg-blue-500 text-white p-3 rounded shadow hover:bg-blue-600 transition"
-                    onClick={getStockValue}
-                >
+                <button className="btn" onClick={get_Stock_Value}>
                     Stock Value
                 </button>
-                <button
-                    className="bg-blue-500 text-white p-3 rounded shadow hover:bg-blue-600 transition"
-                    onClick={getDailyProfit}
-                >
+                <button className="btn" onClick={get_Daily_Profit}>
                     Daily Profit
                 </button>
-                <button
-                    className="bg-blue-500 text-white p-3 rounded shadow hover:bg-blue-600 transition"
-                    onClick={getProfitRange}
-                >
+                <button className="btn" onClick={get_Profit_Range}>
                     Profit (Range)
                 </button>
-                <button
-                    className="bg-blue-500 text-white p-3 rounded shadow hover:bg-blue-600 transition"
-                    onClick={getSalesSummary}
-                >
+                <button className="btn" onClick={get_Sales_Summary}>
                     Sales Summary
                 </button>
             </div>
 
-            {/* Table Output */}
+            {/* Output */}
             <div className="mt-6">
                 {loading && (
-                    <p className="text-blue-500 text-lg font-medium text-center">
-                        Loading...
-                    </p>
+                    <p className="text-blue-500 text-center">Loading...</p>
                 )}
                 {error && (
                     <p className="text-red-500 bg-red-100 p-4 rounded text-center">
                         {error}
                     </p>
                 )}
-                {result && renderTable(result)}
+                {result && renderTable(result , type)}
             </div>
         </div>
     );

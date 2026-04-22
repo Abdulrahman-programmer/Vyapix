@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Bar } from "react-chartjs-2";
+import { monthlyMax } from "../utills/montlyMax";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -19,38 +20,38 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 const MaxSales = () => {
   const [salesData, setSalesData] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const loadSalesData = async () => {
-    try {
-      
-      const token = localStorage.getItem('authToken');
-      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};  
-
-      const response = await axios.get("/api/reports/monthly-max-sold-item", config);
-      setSalesData(response.data);
-      
-      
-    } catch (error) {
-      console.error("Failed to load sales data:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
+  const months = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+  
   
   useEffect(() => {
-    loadSalesData();
+    const token = localStorage.getItem("authToken");
+    const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
+    monthlyMax(axios, setSalesData, setLoading, config);  
   }, []);
 
 
   if (loading) return <div className="w-full h-20 bg-white rounded-2xl flex items-center justify-center dark:bg-gray-800">Loading chart...</div>;
 
-  const labels = salesData.map((d) => `${d.month} (${d.item})`);
+  const labels = salesData.map((d) => `${months[d.month - 1]} (${d.productName})`);
   const data = {
     labels,
     datasets: [
       {
         label: "Max Sold Item",
-        data: salesData.map((d) => d.sold),
+        data: salesData.map((d) => d.totalQuantitySold),
         backgroundColor: "rgba(6, 57, 135, 1)",
         borderRadius: 5,
         barThickness: 10,

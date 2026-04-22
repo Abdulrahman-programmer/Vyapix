@@ -67,7 +67,7 @@ function InventoryManager() {
       console.error("Error fetching products:", err);
       setError("Failed to load products from server.");
     });
-}, []);
+}, [items]); 
 
   const resetForm = () => {
     setName("");
@@ -113,7 +113,7 @@ function InventoryManager() {
 
       setItems((prev) => [...prev, normalized]);
     }
-
+    
     resetForm();
   } catch (err) {
     console.error(err);
@@ -437,7 +437,7 @@ function InventoryManager() {
                 <td className="px-4 py-2 text-sm font-medium">Totals</td>
                 <td />
                 <td />
-                <td className="px-4 py-2 text-right text-sm font-medium">
+                <td className="px-4 py-2 text-right text-sm font-medium" colSpan={2}>
                   {items.reduce((s, it) => s + Number(it.qty), 0)}
                 </td>
                 <td className="px-4 py-2 text-right text-sm font-medium">
@@ -449,7 +449,7 @@ function InventoryManager() {
                     )
                     .toFixed(2)}
                 </td>
-                <td className="px-4 py-2 text-right text-sm font-medium">
+                <td className="px-4 py-2 text-right text-sm font-medium" >
                   ₹
                   {items
                     .reduce(

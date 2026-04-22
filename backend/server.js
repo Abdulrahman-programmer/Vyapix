@@ -4,7 +4,6 @@ const cors = require('cors');
 const connectDB = require('./config/db');
 
 const authRoutes   = require('./routes/auth');
-const storeRoutes  = require('./routes/store');
 const reportRoutes = require('./routes/reports');
 const productRoutes = require('./routes/product');
 const saleRoutes = require('./routes/sale');

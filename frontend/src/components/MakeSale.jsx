@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import BarcodeScanner from './BarcodeScanner';
+import {fetchProducts} from  '../utills/fetchProducts'
+import { postSale } from '../utills/postSale';
 
 
 axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL; 
@@ -10,7 +12,6 @@ export default function MakeSale(params) {
     const [saleCompleted, setSaleCompleted] = useState(false);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [products, setProducts] = useState([]);
     const [productsLoading, setProductsLoading] = useState(false);
@@ -19,6 +20,13 @@ export default function MakeSale(params) {
     const [selectedCategory, setSelectedCategory] = useState('ALL');
     const [scannerOpen, setScannerOpen] = useState(false);
     const [barcodeInput, setBarcodeInput] = useState('');
+
+    const config = {
+        headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('authToken')}`
+        }
+    };
 
     // ----------- Helper FUNCTION for ID (fix mismatch issues) -----------
     const getProductId = (p) => String(p.id ?? p._id ?? p.productId ?? p.barcode);
@@ -40,28 +48,17 @@ export default function MakeSale(params) {
     // ----------- Fetch Products When Modal Opens -----------
     useEffect(() => {
         if (!isModalOpen) return;
-
-        const fetchProducts = async () => {
+        try {
             setProductsLoading(true);
-            const token = localStorage.getItem('authToken');
-            const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-
-            try {
-                const res = await axios.get('/api/store/products', config);
-                setProducts(
-                    Array.isArray(res.data) 
-                        ? res.data 
-                        : (res.data.payload || [])
-                );
-            } catch (err) {
-                setError('Could not load products');
-                setProducts([]);
-            } finally {
-                setProductsLoading(false);
-            }
-        };
-
-        fetchProducts();
+            fetchProducts(axios , config)
+                .then((data) => setProducts(data))
+                .then(() => console.log('Products loaded for sale:', products))
+                .catch((err) => setError(err?.message || 'Failed to load products'))
+                .finally(() => setProductsLoading(false));
+        } catch (err) {
+            setError(err?.message || 'Failed to load products');
+            setProductsLoading(false);
+        }
     }, [isModalOpen]);
 
     // ----------- Open Modal -----------
@@ -108,14 +105,6 @@ export default function MakeSale(params) {
         setLoading(true);
         setError(null);
 
-        const token = localStorage.getItem('authToken');
-        const postConfig = {
-            headers: {
-                'Content-Type': 'application/json',
-                ...(token ? { Authorization: `Bearer ${token}` } : {})
-            }
-        };
-
         try {
             
             const items = selectedIds.map((id) => {
@@ -132,7 +121,7 @@ export default function MakeSale(params) {
 
             for (const item of items) {
                 try {
-                    await axios.post('/api/store/sale', item, postConfig);
+                    await postSale(axios, item, config);
                     results.success.push(item.barcode);
                 } catch (e) {
                     results.failed.push({
@@ -147,7 +136,7 @@ export default function MakeSale(params) {
                 resetSaleState();
                 setIsModalOpen(false);
 
-                try { params.refreshSales?.(); } catch {}
+                try { params.refreshSales(); } catch {}
 
                 setTimeout(() => setSaleCompleted(false), 2000);
             } else {

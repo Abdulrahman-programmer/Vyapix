@@ -3,6 +3,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import Loading from "../components/Loading";
 import MakeSale from "../components/MakeSale";
+import { deleteSale } from "../utills/deleteSale";
 
 axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL;
 
@@ -34,7 +35,7 @@ function Sales() {
         setLoading(true);
         setError(null);
         try {
-            const res = await axios.get("/api/store/sales", authConfig());
+            const res = await axios.get("/api/sales", authConfig());
             const data = toArray(res.data);
             setSales(data);
             setDisplayedSales(data);
@@ -52,7 +53,7 @@ function Sales() {
     const deleteSale = async (saleId) => {
         if (!window.confirm("Are you sure you want to delete this sale?")) return;
         try {
-            await axios.delete(`/api/store/sale/${saleId}`, authConfig());
+            await deleteSale(axios, saleId, authConfig());
             fetchSales();
         } catch (err) {
             alert(err.response?.data?.message || err.message || "Failed to delete sale");
@@ -74,8 +75,9 @@ function Sales() {
             let res;
 
             if (filterType === "single") {
-                res = await axios.get(`/api/store/sale/${singleDate}`, authConfig());
-                setDisplayedSales(toArray(res.data?.data));
+                res = await axios.get(`/api/sales?date=${singleDate}`, authConfig());
+                
+                setDisplayedSales(toArray(res.data));
             } else if (filterType === "range") {
                 const params = new URLSearchParams();
                 if (startDate) params.append("startDate", `${startDate}T00:00:00`);
@@ -83,7 +85,7 @@ function Sales() {
 
                 const query = params.toString() ? `?${params.toString()}` : "";
                 res = await axios.get(`/api/sales/date-range${query}`, authConfig());
-                setDisplayedSales(toArray(res.data?.data));
+                setDisplayedSales(toArray(res.data));
             }
         } catch (err) {
             setError(err.response?.data?.message || err.message || "Failed to fetch filtered sales");

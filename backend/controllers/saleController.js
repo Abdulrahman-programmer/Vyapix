@@ -47,6 +47,46 @@ exports.getSales = async (req, res) => {
   }
 }
 
+exports.getSalesByDate = async (req, res) => {
+  try {
+    const { date } = req.query;
+    if (!date) {
+      return res.status(400).json({ error: "Date is required (YYYY-MM-DD)" });
+    }
+
+    const start = new Date(`${date}T00:00:00.000Z`);
+    const end = new Date(`${date}T23:59:59.999Z`);
+
+    const sales = await sale.find({
+      userId: req.user.id,
+      createdAt: { $gte: start, $lte: end }
+    }).populate("productId");
+
+    res.json(sales);
+
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+exports.getSalesByDateRange = async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    end.setDate(end.getDate() + 1);
+
+    const sales = await sale.find({
+      userId: req.user.id,
+      createdAt: { $gte: start, $lt: end }
+    }).populate('productId');
+
+    res.json(sales);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
 exports.getSalesCount = async (req, res) => {
   try {
     const count = await sale.countDocuments({ userId: req.user.id });
