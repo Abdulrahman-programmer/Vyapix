@@ -31,11 +31,12 @@ function SignUp(params) {
                 params.close?.();
 
                 // navigate to afterlogin page and pass name/email in state
-                sessionStorage.setItem("userName",payload.username);
+                sessionStorage.setItem("name",payload.name);
                 sessionStorage.setItem("userEmail",payload.email);
+
                 const res = await axios.post("api/auth/login", { email: payload.email, password: payload.password });
                 localStorage.setItem("authToken", res.data.token);
-                navigate("/afterlogin", { state: { name: payload?.username || "", email: payload?.email || "" } });
+                navigate("/afterlogin", { state: { name: payload?.name || "", email: payload?.email || "" } });
             } else {
                 alert("Signup failed. Please try again.");
             }

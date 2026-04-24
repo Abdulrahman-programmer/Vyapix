@@ -8,7 +8,7 @@ import Menu from '../components/Menu';
 
 function After_logIn(params) {
   const location = useLocation();
-const { name, email } = location.state || {};
+  const { name, email } = location.state || {};
 
   return (
     <>
