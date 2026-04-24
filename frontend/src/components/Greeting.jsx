@@ -2,7 +2,7 @@
 import { useState,useEffect } from "react";
 function Greeting(params) {
     const [displayedText, setDisplayedText] = useState('');
-    const fullText = `Welcome Back, ${sessionStorage.getItem("userName") || 'Admin'}`;
+    const fullText = `Welcome Back, ${sessionStorage.getItem("name") || 'Admin'}`;
 
     useEffect(() => {
         let i = 0;
